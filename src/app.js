@@ -10,8 +10,12 @@ const {
 const uuid = require('uuid/v4');
 const bodyParser = require('body-parser')
 
-const app = express()
+const bookmarkGET = require('./bookmark/bookmark-get')
+const bookmarkGETid = require('./bookmark/bookmark-get-id')
+const bookmarkPOST = require('./bookmark/bookmark-post')
+const bookmarkDELETE = require('./bookmark/bookmark-delete')
 
+const app = express()
 
 const morganOption = (NODE_ENV === 'production') ?
   'tiny' :
@@ -38,6 +42,13 @@ app.use(cors())
 app.use(helmet())
 app.use(express.json());
 app.use(bodyParser())
+
+app.use(bookmarkGET)
+app.use(bookmarkGETid)
+app.use(bookmarkPOST)
+app.use(bookmarkDELETE)
+
+/////////////////////////
 
 // app.use(function validateBearerToken(req, res, next) {
 //   const apiToken = process.env.API_TOKEN
@@ -259,70 +270,69 @@ app.delete('/list/:id', (req, res) => {
 
 });
 
-app.get('/bookmark', (req, res) => {
-  res
-    .json(BOOKMARK);
-});
+// app.get('/bookmark', (req, res) => {
+//   res
+//     .json(BOOKMARK);
+// });
 
-app.get('/bookmark/:id', (req, res) => {
-  const {
-    id
-  } = req.params;
-  const bookmark = BOOKMARK.find(c => c.id == id);
+// app.get('/bookmark/:id', (req, res) => {
+//   const {
+//     id
+//   } = req.params;
+//   const bookmark = BOOKMARK.find(c => c.id == id);
 
-  // make sure we found a bookmark
-  if (!bookmark) {
-    logger.error(`Bookmark with id ${id} not found.`);
-    return res
-      .status(404)
-      .send('Bookmark Not Found');
-  }
+//   // make sure we found a bookmark
+//   if (!bookmark) {
+//     logger.error(`Bookmark with id ${id} not found.`);
+//     return res
+//       .status(404)
+//       .send('Bookmark Not Found');
+//   }
 
-  res.json(bookmark);
-});
+//   res.json(bookmark);
+// });
 
-app.post('/bookmark', (req, res) => {
-  const {
-    title,
-    content
-  } = req.body;
+// app.post('/bookmark', (req, res) => {
+//   const {
+//     title,
+//     content
+//   } = req.body;
 
-  if (!title) {
-    logger.error(`Title is required`);
-    return res
-      .status(400)
-      .send('Invalid data');
-  }
+//   if (!title) {
+//     logger.error(`Title is required`);
+//     return res
+//       .status(400)
+//       .send('Invalid data');
+//   }
 
-  if (!content) {
-    logger.error(`Content is required`);
-    return res
-      .status(400)
-      .send('Invalid data');
-  }
+//   if (!content) {
+//     logger.error(`Content is required`);
+//     return res
+//       .status(400)
+//       .send('Invalid data');
+//   }
 
-  console.log(`before uuid`)
-  const uuid = BOOKMARK.length + 1;
-  console.log(`passed uuid`)
+//   console.log(`before uuid`)
+//   const uuid = BOOKMARK.length + 1;
+//   console.log(`passed uuid`)
 
-  const bookmark = {
-    uuid,
-    title,
-    content
-  };
+//   const bookmark = {
+//     uuid,
+//     title,
+//     content
+//   };
 
-  BOOKMARK.push(bookmark);
+//   BOOKMARK.push(bookmark);
 
-  logger.info(`Bookmark with id ${uuid} created`);
+//   logger.info(`Bookmark with id ${uuid} created`);
 
-  res
-    .status(201)
-    .location(`http://localhost:8000/bookmark/${uuid}`)
-    .json({
-      uuid
-    });
-})
-
+//   res
+//     .status(201)
+//     .location(`http://localhost:8000/bookmark/${uuid}`)
+//     .json({
+//       uuid
+//     });
+// })
 
 ///////////////////////
 
