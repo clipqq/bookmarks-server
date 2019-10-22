@@ -16,12 +16,12 @@ describe('App', () => {
       .get('/bookmark/1')
       .expect(200)
   })
-  it('POST /bookmark responds with 500 cuz no content yo', () => {
+  it('POST /bookmark responds with 400, bad request', () => {
     return supertest(app)
       .post('/bookmark')
-      .expect(500)
+      .expect(400)
   })
-  it('DELETE /bookmark responds with 200', () => {
+  it('DELETE /bookmark responds with 204', () => {
     return supertest(app)
       .delete('/bookmark/1')
       .expect(204)

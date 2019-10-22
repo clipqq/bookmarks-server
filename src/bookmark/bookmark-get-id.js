@@ -2,6 +2,7 @@ const express = require('express')
 const bookmarkGETid = express.Router()
 const bodyParser = express.json()
 const BOOKMARK = require('./bookmark') // new data store
+const logger = require('../logger')
 
 bookmarkGETid.get('/bookmark/:id', (req, res) => {
     const {

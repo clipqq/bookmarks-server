@@ -1,7 +1,6 @@
 require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
-const winston = require('winston');
 const cors = require('cors')
 const helmet = require('helmet')
 const {
@@ -20,22 +19,6 @@ const app = express()
 const morganOption = (NODE_ENV === 'production') ?
   'tiny' :
   'common';
-
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.json(),
-  transports: [
-    new winston.transports.File({
-      filename: 'info.log'
-    })
-  ]
-});
-
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
-    format: winston.format.simple()
-  }));
-}
 
 app.use(morgan(morganOption))
 app.use(cors())

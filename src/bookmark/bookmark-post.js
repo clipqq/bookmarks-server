@@ -2,14 +2,16 @@ const express = require('express')
 const bookmarkPOST = express.Router()
 const bodyParser = express.json()
 const BOOKMARK = require('./bookmark') // new data store
+const logger = require('../logger')
 
 bookmarkPOST.route('/bookmark')
-    .post(bodyParser, (req, res) => {
+    .post((req, res) => {
+        console.log(`req.body`, req.body)
+
         const {
             title,
             content
         } = req.body;
-
         if (!title) {
             logger.error(`Title is required`);
             return res
