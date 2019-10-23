@@ -8,6 +8,7 @@ const {
 } = require('./config')
 const uuid = require('uuid/v4');
 const bodyParser = require('body-parser')
+const logger = require('./logger')
 
 const bookmarkGET = require('./bookmark/bookmark-get')
 const bookmarkGETid = require('./bookmark/bookmark-get-id')
@@ -33,17 +34,16 @@ app.use(bookmarkDELETE)
 
 /////////////////////////
 
-// app.use(function validateBearerToken(req, res, next) {
-//   const apiToken = process.env.API_TOKEN
-//   const authToken = req.get('Authorization')
-
-//   if (!authToken || authToken.split(' ')[1] !== apiToken) {
-//     logger.error(`Unauthorized request to path: ${req.path}`);
-//     return res.status(401).json({ error: 'Unauthorized request' })
-//   }
-//   // move to the next middleware
-//   next()
-// })
+app.use(function validateBearerToken(req, res, next) {
+  const apiToken = process.env.API_TOKEN
+  const authToken = req.get('Authorization')
+  if (!authToken || authToken.split(' ')[1] !== apiToken) {
+    logger.error(`Unauthorized request to path: ${req.path}`);
+    return res.status(401).json({ error: 'Unauthorized request' })
+  }
+  // move to the next middleware
+  next()
+})
 
 const cards = [{
   id: 1,
@@ -252,70 +252,6 @@ app.delete('/list/:id', (req, res) => {
     .end();
 
 });
-
-// app.get('/bookmark', (req, res) => {
-//   res
-//     .json(BOOKMARK);
-// });
-
-// app.get('/bookmark/:id', (req, res) => {
-//   const {
-//     id
-//   } = req.params;
-//   const bookmark = BOOKMARK.find(c => c.id == id);
-
-//   // make sure we found a bookmark
-//   if (!bookmark) {
-//     logger.error(`Bookmark with id ${id} not found.`);
-//     return res
-//       .status(404)
-//       .send('Bookmark Not Found');
-//   }
-
-//   res.json(bookmark);
-// });
-
-// app.post('/bookmark', (req, res) => {
-//   const {
-//     title,
-//     content
-//   } = req.body;
-
-//   if (!title) {
-//     logger.error(`Title is required`);
-//     return res
-//       .status(400)
-//       .send('Invalid data');
-//   }
-
-//   if (!content) {
-//     logger.error(`Content is required`);
-//     return res
-//       .status(400)
-//       .send('Invalid data');
-//   }
-
-//   console.log(`before uuid`)
-//   const uuid = BOOKMARK.length + 1;
-//   console.log(`passed uuid`)
-
-//   const bookmark = {
-//     uuid,
-//     title,
-//     content
-//   };
-
-//   BOOKMARK.push(bookmark);
-
-//   logger.info(`Bookmark with id ${uuid} created`);
-
-//   res
-//     .status(201)
-//     .location(`http://localhost:8000/bookmark/${uuid}`)
-//     .json({
-//       uuid
-//     });
-// })
 
 ///////////////////////
 

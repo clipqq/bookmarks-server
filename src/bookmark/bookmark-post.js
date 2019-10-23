@@ -3,6 +3,18 @@ const bookmarkPOST = express.Router()
 const bodyParser = express.json()
 const BOOKMARK = require('./bookmark') // new data store
 const logger = require('../logger')
+const uuidv4 = require('uuid/v4')
+
+bookmarkPOST.use(function validateBearerToken(req, res, next) {
+    const apiToken = process.env.API_TOKEN
+    const authToken = req.get('Authorization')
+    if (!authToken || authToken.split(' ')[1] !== apiToken) {
+      logger.error(`Unauthorized request to path: ${req.path}`);
+      return res.status(401).json({ error: 'Unauthorized request' })
+    }
+    // move to the next middleware
+    next()
+  })
 
 bookmarkPOST.route('/bookmark')
     .post((req, res) => {
@@ -27,24 +39,23 @@ bookmarkPOST.route('/bookmark')
         }
 
         console.log(`before uuid`)
-        const uuid = BOOKMARK.length + 1;
+        const id = uuidv4();
         console.log(`passed uuid`)
 
         const bookmark = {
-            uuid,
+            id,
             title,
             content
         };
-
         BOOKMARK.push(bookmark);
 
-        logger.info(`Bookmark with id ${uuid} created`);
+        logger.info(`Bookmark with id ${id} created`);
 
         res
             .status(201)
-            .location(`http://localhost:8000/bookmark/${uuid}`)
+            .location(`http://localhost:8000/bookmark/${id}`)
             .json({
-                uuid
+                id
             });
     })
 

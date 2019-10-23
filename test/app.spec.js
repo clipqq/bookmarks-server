@@ -26,4 +26,9 @@ describe('App', () => {
       .delete('/bookmark/1')
       .expect(204)
   })
+  it('should run authentication', () => {
+    return supertest(app)
+      .get('/bookmark')
+      .expect(401)
+  })
 })
