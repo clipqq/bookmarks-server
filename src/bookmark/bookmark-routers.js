@@ -4,6 +4,7 @@ const bodyParser = express.json()
 const BOOKMARK = require('./bookmark') // new data store
 const logger = require('../logger')
 const uuidv4 = require('uuid/v4')
+const BookmarksService = require('./bookmark-service')
 
 
 bookmarkRouters.use(function validateBearerToken(req, res, next) {
@@ -24,12 +25,21 @@ bookmarkRouters.get('/', (req, res) => {
     res
         .send('Homepage works!');
 });
+bookmarkRouters
+    .route('/bookmarks')
+    .get((req, res, next) => {
+            BookmarksService.getAllBookmarks(req.app.get('db'))
+                .then(bookmarks => {
+                        res.json(bookmarks) // serialize was here
+                })
+        .catch(next)
+    })
 
 // get all bookmarks
-bookmarkRouters.route('/bookmark').get((req, res) => {
-    res
-        .json(BOOKMARK);
-})
+// bookmarkRouters.route('/bookmark').get((req, res) => {
+//     res
+//         .json(BOOKMARK);
+// })
 
 // get by id
 bookmarkRouters.get('/bookmark/:id', (req, res) => {

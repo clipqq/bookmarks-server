@@ -18,6 +18,8 @@ const morganOption = (NODE_ENV === 'production') ?
   'tiny' :
   'common';
 
+const BookmarkService = require('./bookmark/bookmark-service')
+
 app.use(morgan(morganOption))
 app.use(cors())
 app.use(helmet())
@@ -26,22 +28,18 @@ app.use(bodyParser())
 
 app.use(bookmarkRouters)
 
-/////////////////////////
-
 app.use(function validateBearerToken(req, res, next) {
   const apiToken = process.env.API_TOKEN
   const authToken = req.get('Authorization')
   if (!authToken || authToken.split(' ')[1] !== apiToken) {
     logger.error(`Unauthorized request to path: ${req.path}`);
-    return res.status(401).json({ error: 'Unauthorized request' })
+    return res.status(401).json({
+      error: 'Unauthorized request'
+    })
   }
   // move to the next middleware
   next()
 })
-
-
-
-///////////////////////
 
 app.use(function errorHandler(error, req, res, next) {
   let response
@@ -60,5 +58,18 @@ app.use(function errorHandler(error, req, res, next) {
   }
   res.status(500).json(response)
 })
+
+
+app.get('/bookmarks', (req, res, next) => {
+  const knexInstance = req.app.get('db')
+  BookmarksService.getAllBookmarks(knexInstance)
+    .then(bookmarks => {
+      res.json(bookmarks)
+    })
+    .catch(next)
+})
+
+
+
 
 module.exports = app
