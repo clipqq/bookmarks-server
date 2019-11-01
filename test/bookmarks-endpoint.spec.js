@@ -4,7 +4,30 @@ const {
 const knex = require('knex')
 const app = require('../src/app')
 
-describe.only('Bookmarks Endpoints', function () {
+const testBookmarks = [{
+        id: 1,
+        title: 'Thinkful',
+        url: 'https://www.thinkful.com',
+        description: 'Think outside the classroom',
+        rating: '5',
+    },
+    {
+        id: 2,
+        title: 'Google',
+        url: 'https://www.google.com',
+        description: 'Where we find everything else',
+        rating: '4',
+    },
+    {
+        id: 3,
+        title: 'MDN',
+        url: 'https://developer.mozilla.org',
+        description: 'The only place to find web documentation',
+        rating: '5',
+    },
+]
+
+describe('Bookmarks Endpoints', function () {
     let db
 
     before('make knex instance', () => {
@@ -12,49 +35,128 @@ describe.only('Bookmarks Endpoints', function () {
             client: 'pg',
             connection: process.env.TEST_DB_URL,
         })
+        app.set('db', db)
     })
-
-    app.set('db', db)
 
     after('disconnect from db', () => db.destroy())
 
-    before('clean the table', () => db('bookmarks').truncate())
+    before('cleanup', () => db('bookmarks').truncate())
+
+    afterEach('cleanup', () => db('bookmarks').truncate())
+
+    context(`Given no bookmarks`, () => {
+        it(`responds with 200 and an empty list`, () => {
+            return supertest(app)
+                .get('/bookmarks')
+                .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                .expect(200, [])
+        })
+    })
+
+
 
     context('Given there are bookmarks in the database', () => {
-        const testBookmarks = [{
-                "id": 1,
-                "title": "AAAAAAA",
-                "url": "https://www.thinkful.com",
-                "rating": "5",
-                "description": "Think outside the classroom"
-            },
-            {
-                "id": 2,
-                "title": "BBBBBB",
-                "url": "https://www.google.com",
-                "rating": "4",
-                "description": "Where we find everything else"
-            },
-            {
-                "id": 3,
-                "title": "CCCCCC",
-                "url": "https://developer.mozilla.org",
-                "rating": "5",
-                "description": "The only place to find web documentation"
-            }
-        ]
-
         beforeEach('insert bookmarks', () => {
             return db
                 .into('bookmarks')
                 .insert(testBookmarks)
         })
-        it('GET /bookmarks responds with 200 and all of the bookmarks', () => {
+
+        it('gets the bookmarks from the store', () => {
             return supertest(app)
-                .get('/bookmarks', )
-                .set('Authorization', `Bearer ${process.env.API_TOKEN}`,            console.log(`got into GET test`)
-                )
+                .get('/bookmarks')
+                .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
                 .expect(200, testBookmarks)
         })
+        it('responds with 200 and the specified bookmark', () => {
+            const bookmarkId = '2'
+            const expectedBookmark = testBookmarks[bookmarkId - 1]
+            return supertest(app)
+                .get(`/bookmarks/${bookmarkId}`)
+                .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                .expect(200, expectedBookmark, testBookmarks)
+        })
+        it(`responds 404 when bookmark doesn't exist`, () => {
+            return supertest(app)
+                .get(`/bookmarks/999999`)
+                .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                .expect(404, {
+                    error: {
+                        message: `Bookmark Not Found`
+                    }
+                })
+        })
+
     })
+
+
 })
+
+describe.only(`POST /bookmarks`, () => {
+    it('adds a new bookmark to the store', () => {
+        const newBookmark = {
+            title: 'test-title',
+            url: 'https://test.com',
+            description: 'test description',
+            rating: '5',
+        }
+        console.log(newBookmark, `new bookmark`)
+        return supertest(app)
+            .post(`/bookmarks`)
+            .send(newBookmark)
+            .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+            .expect(201)
+            .expect(res => {
+                expect(res.body.title).to.eql(newBookmark.title)
+                expect(res.body.url).to.eql(newBookmark.url)
+                expect(res.body.description).to.eql(newBookmark.description)
+                expect(res.body.rating).to.eql(newBookmark.rating)
+                expect(res.body).to.have.property('id')
+            })
+            .then(res =>
+                supertest(app)
+                .get(`/bookmarks/${res.body.id}`)
+                .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                .expect(res.body)
+            )
+    })
+
+})
+
+describe('DELETE /bookmarks/:id', () => {
+    let db
+
+    context(`Given no bookmarks`, () => {
+      it(`responds 404 whe bookmark doesn't exist`, () => {
+        return supertest(app)
+          .delete(`/bookmarks/123`)
+          .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+          .expect(404, {
+            error: { message: `Bookmark Not Found` }
+          })
+      })
+    })
+
+    context('Given there are bookmarks in the database', () => {
+      beforeEach('insert bookmarks', () => {
+        return db
+          .into('bookmarks')
+          .insert(testBookmarks)
+      })
+
+      it('removes the bookmark by ID from the store', () => {
+        const idToRemove = 2
+        const expectedBookmarks = testBookmarks.filter(bm => bm.id !== idToRemove)
+        return supertest(app)
+          .delete(`/bookmarks/${idToRemove}`)
+          .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+          .expect(204)
+          .then(() =>
+            supertest(app)
+              .get(`/bookmarks`)
+              .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+              .expect(expectedBookmarks)
+          )
+      })
+    })
+  })
